@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
         while (fgets(buffer, 100, fp) != NULL) {
             if (feof(fp)) {
                 fclose(fp);
-                fflush(fp);
+                fflush(stdout);
                 _exit(EXIT_SUCCESS);
                 return 0;
             }
@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
             if (strcmp(buffer, "exit\n") == 0) {
                 fclose(fp);
                 write(STDOUT_FILENO, "exit\n", 6);
-                fflush(fp);
+                fflush(stdout);
                 _exit(EXIT_SUCCESS);
                 return 0;
             }
@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
                     tok = strtok(NULL, " ");
                     if (tok != NULL) {
                         write(STDERR_FILENO, "Redirection misformatted.\n", 30);
-                        fflush(fp);
+                        fflush(stdout);
                         //fprintf(stderr, "Redirection misformatted.\n");
                         return 0;
                     }
@@ -72,11 +72,11 @@ int main(int argc, char *argv[]) {
                     if (tok == NULL) {
                         write(STDERR_FILENO, "Redirection misformatted.\n", 30);
                         //fprintf(stderr, "Redirection misformatted.\n");
-                        fflush(fp);
+                        fflush(stdout);
                         return 0;
                     } else if (strchr(tok, '>')) {
                         write(STDERR_FILENO, "Redirection misformatted.\n", 30);
-                        fflush(fp);
+                        fflush(stdout);
                         //fprintf(stderr, "Redirection misformatted.\n");
                         return 0;
                     }
@@ -113,8 +113,12 @@ int main(int argc, char *argv[]) {
                     dup2(fd,2);
                     close(fd);
                     execv(path2,argv);
+                    fflush(stdout);
+                    _exit(EXIT_SUCCESS);
                 } else {
                     execv(path2,argv);
+                    fflush(stdout);
+                    _exit(EXIT_SUCCESS);
                 }
 
             } else {
@@ -123,7 +127,7 @@ int main(int argc, char *argv[]) {
         
         }
         fclose(fp);
-        fflush(fp);
+        fflush(stdout);
         _exit(EXIT_SUCCESS);
     } else {
         int helper = 1;
@@ -184,8 +188,11 @@ int main(int argc, char *argv[]) {
                     dup2(fd,2);
                     close(fd);
                     execv(path2, argv);
+                    
+                    _exit(EXIT_SUCCESS);
                 } else {
                     execv(path2,argv);
+                    _exit(EXIT_SUCCESS);
                 }
 
             } else {
