@@ -10,19 +10,29 @@ int main(int argc, char *argv[]) {
     char commandLine[512];
     char* path = "/";
     if (argc > 2) {
-        fprintf(stderr,"Usage: mysh [batch-file]\n");
+        write(STDERR_FILENO, "Usage: mysh [batch-file]\n", 26);
+        //fprintf(stderr,"Usage: mysh [batch-file]\n");
+        //fflush();
         return 1;
     }
     if (argc == 2) {
         if (!strchr(argv[1], '.')) {
-            fprintf(stderr, "Error: Cannot open file this_file_does_not_exist.\n");
+            write(STDERR_FILENO, "Error: Cannot open file this_file_does_not_exist.\n", 50);
+            //fprintf(stderr, "Error: Cannot open file this_file_does_not_exist.\n");
+            //fflush();
             return 1;
         }
     }
     if (argv[1]) {
         FILE *fp = fopen(argv[1],"r");
         char buffer[100];
-        while (fgets(buffer, 100, fp)) {
+        while (fgets(buffer, 100, fp) != NULL) {
+            if (feof(fp)) {
+                fclose(fp);
+                fflush(fp);
+                _exit(EXIT_SUCCESS);
+                return 0;
+            }
             if (buffer == NULL) {
                 break;
             }
@@ -31,8 +41,11 @@ int main(int argc, char *argv[]) {
                 
             // }
             if (strcmp(buffer, "exit\n") == 0) {
+                fclose(fp);
                 write(STDOUT_FILENO, "exit\n", 6);
-                exit(EXIT_SUCCESS);
+                fflush(fp);
+                _exit(EXIT_SUCCESS);
+                return 0;
             }
             
             char *tok;
@@ -45,13 +58,31 @@ int main(int argc, char *argv[]) {
                     argv[j] = tok;
                     fi = tok;
                     tok = strtok(NULL, " ");
+                    if (tok != NULL) {
+                        write(STDERR_FILENO, "Redirection misformatted.\n", 30);
+                        fflush(fp);
+                        //fprintf(stderr, "Redirection misformatted.\n");
+                        return 0;
+                    }
                     j = j + 1;
                     
                 } else if (strchr(tok, '>')) {
                     argv[j] = tok;
                     tok = strtok(NULL, " ");
+                    if (tok == NULL) {
+                        write(STDERR_FILENO, "Redirection misformatted.\n", 30);
+                        //fprintf(stderr, "Redirection misformatted.\n");
+                        fflush(fp);
+                        return 0;
+                    } else if (strchr(tok, '>')) {
+                        write(STDERR_FILENO, "Redirection misformatted.\n", 30);
+                        fflush(fp);
+                        //fprintf(stderr, "Redirection misformatted.\n");
+                        return 0;
+                    }
                     i = 1;
                     j = j + 1;
+                    
                     
                 } else {
                     argv[j] = tok;
@@ -81,6 +112,7 @@ int main(int argc, char *argv[]) {
                     dup2(fd,1);
                     dup2(fd,2);
                     close(fd);
+                    execv(path2,argv);
                 } else {
                     execv(path2,argv);
                 }
@@ -90,6 +122,9 @@ int main(int argc, char *argv[]) {
             }
         
         }
+        fclose(fp);
+        fflush(fp);
+        _exit(EXIT_SUCCESS);
     } else {
         int helper = 1;
         while (helper) {
@@ -99,7 +134,8 @@ int main(int argc, char *argv[]) {
             }
             if (strcmp(commandLine, "exit\n") == 0) {
                 write(STDOUT_FILENO, "exit\n", 6);
-                exit(EXIT_SUCCESS);
+                _exit(EXIT_SUCCESS);
+                return 0;
             }
             char *tok;
             tok = strtok(commandLine, " ");
@@ -156,6 +192,8 @@ int main(int argc, char *argv[]) {
                 wait(NULL);
             }
         }
+        _exit(EXIT_SUCCESS);
+        return 0;
     }
     return 0;
 }
