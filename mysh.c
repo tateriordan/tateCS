@@ -53,9 +53,18 @@ int main(int argc, char *argv[]) {
             int j = 0;
             char *fi = NULL;
             int i = 0;
+            int d = 0;
             while (tok != NULL) {
-                if (i == 1) {
-                    argv[j] = tok;
+                if (j == 0 && strchr(tok, '>')) {
+                    fclose(fp);
+                    write(STDERR_FILENO, "Redirection misformatted.\n", strlen("Redirection misformatted.\n"));        
+                    fflush(stderr);
+                    write(STDOUT_FILENO, "exit\n", strlen("exit\n"));
+                    fflush(stdout);
+                    _exit(EXIT_SUCCESS);
+                    return 0;
+                } else if (i == 1) {
+                    //argv[j] = tok;
                     fi = tok;
                     tok = strtok(NULL, " ");
                     if (tok != NULL) {
@@ -68,15 +77,45 @@ int main(int argc, char *argv[]) {
                         _exit(EXIT_SUCCESS);
                         return 0;
                     }
-                    j = j + 1;
-                    
                 } else if (strchr(tok, '>')) {
-                    argv[j] = tok;
+                    if (d != 0) {
+                        for (int r = 1; r < j; ++r) {
+                            argv[r] = argv[r+1];
+                        }
+                        j = j - 1;
+                    }
+                    // if (strlen(tok) > 1) {
+                    //     char *toke;
+                    //     toke = strtok(tok, ">");
+                    //     int e = 0;
+                    //     while (toke != NULL) {
+                    //         if (strchr(toke,'>') != 0 && e == 0) {
+                    //             argv[j] = toke;
+                    //             toke = strtok(NULL, " ");
+                    //             j = j + 1;
+                    //         } else if (strchr(toke, '>') == 0) {
+                    //             toke = strtok(NULL, " ");
+                    //             fi = toke;
+                    //             toke = strtok(NULL, " ");
+                    //             if (toke != NULL) {
+                    //                 fclose(fp);
+                    //                 write(STDERR_FILENO, "Redirection misformatted.\n", strlen("Redirection misformatted.\n"));
+                    //                 fflush(stderr);
+                    //                 fflush(stdout);
+                    //                 write(STDOUT_FILENO, "exit\n", strlen("exit\n"));
+                    //                 fflush(stdout);
+                    //                 _exit(EXIT_SUCCESS);
+                    //                 return 0;
+                    //             }
+                    //         }
+                    //         e = 1;
+                    //     }
+                    //     break;
+                    // }
                     tok = strtok(NULL, " ");
                     if (tok == NULL) {
                         fclose(fp);
                         write(STDERR_FILENO, "Redirection misformatted.\n", strlen("Redirection misformatted.\n"));
-                        
                         fflush(stderr);
                         write(STDOUT_FILENO, "exit\n", strlen("exit\n"));
                         fflush(stdout);
@@ -93,12 +132,13 @@ int main(int argc, char *argv[]) {
                         return 0;
                     }
                     i = 1;
-                    j = j + 1;
+                    //j = j + 1;
                     
                     
                 } else if (strcmp(tok, "/bin/echo") == 0) {
                     argv[j] = tok;
                     argv[j+1] = "-n";
+                    d = j + 1;
                     tok = strtok(NULL, " ");
                     j = j + 2;
                 } else {
@@ -107,12 +147,20 @@ int main(int argc, char *argv[]) {
                     j = j + 1;
                 }
             }
+            
             argv[j] = NULL;
             argc = j;
-        // for (int i = 0; i < argc; ++i) {
-        //     write(1, argv[i], strlen(argv[i]));
-        // }
-            
+            // if (strchr(argv[argc-1], '>') == 0) {
+            //     char *toke;
+            //     toke = strtok(argv[argc-1], ">");
+            //     argv[argc-1] = toke;
+            // }
+            // if (strchr(fi, '>') == 0) {
+            //     char *token1;
+            //     token1 = strtok(fi, ">");
+            //     token1 = strtok(fi, " ");
+            //     fi = token1;
+            // }
             char path2[512];
             strcpy(path2, path);
             strcat(path2, argv[0]);
