@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
             write(STDOUT_FILENO,buffer, strlen(buffer));
             fflush(stdout);
             char *tok;
-            tok = strtok(buffer, " ");
+            tok = strtok(buffer, " \t");
             int j = 0;
             char *fi = NULL;
             int i = 0;
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
                 } else if (i == 1) {
                     //argv[j] = tok;
                     fi = tok;
-                    tok = strtok(NULL, " ");
+                    tok = strtok(NULL, " \t");
                     if (tok != NULL) {
                         fclose(fp);
                         write(STDERR_FILENO, "Redirection misformatted.\n", strlen("Redirection misformatted.\n"));
@@ -84,35 +84,7 @@ int main(int argc, char *argv[]) {
                         }
                         j = j - 1;
                     }
-                    // if (strlen(tok) > 1) {
-                    //     char *toke;
-                    //     toke = strtok(tok, ">");
-                    //     int e = 0;
-                    //     while (toke != NULL) {
-                    //         if (strchr(toke,'>') != 0 && e == 0) {
-                    //             argv[j] = toke;
-                    //             toke = strtok(NULL, " ");
-                    //             j = j + 1;
-                    //         } else if (strchr(toke, '>') == 0) {
-                    //             toke = strtok(NULL, " ");
-                    //             fi = toke;
-                    //             toke = strtok(NULL, " ");
-                    //             if (toke != NULL) {
-                    //                 fclose(fp);
-                    //                 write(STDERR_FILENO, "Redirection misformatted.\n", strlen("Redirection misformatted.\n"));
-                    //                 fflush(stderr);
-                    //                 fflush(stdout);
-                    //                 write(STDOUT_FILENO, "exit\n", strlen("exit\n"));
-                    //                 fflush(stdout);
-                    //                 _exit(EXIT_SUCCESS);
-                    //                 return 0;
-                    //             }
-                    //         }
-                    //         e = 1;
-                    //     }
-                    //     break;
-                    // }
-                    tok = strtok(NULL, " ");
+                    tok = strtok(NULL, " \t");
                     if (tok == NULL) {
                         fclose(fp);
                         write(STDERR_FILENO, "Redirection misformatted.\n", strlen("Redirection misformatted.\n"));
@@ -139,23 +111,25 @@ int main(int argc, char *argv[]) {
                     argv[j] = tok;
                     argv[j+1] = "-n";
                     d = j + 1;
-                    tok = strtok(NULL, " ");
+                    tok = strtok(NULL, " \t");
                     j = j + 2;
                 } else {
                     argv[j] = tok;
-                    tok = strtok(NULL, " ");
+                    tok = strtok(NULL, " \t");
                     j = j + 1;
                 }
             }
-            
+            if (strcmp(argv[j-1], " \t") == 0) {
+                argv[j-1] = NULL;
+            }
             argv[j] = NULL;
             argc = j;
-            // if (strchr(argv[argc-1], '>') == 0) {
+            // if (strchr(argv[argc-1], '>') != NULL) {
             //     char *toke;
             //     toke = strtok(argv[argc-1], ">");
             //     argv[argc-1] = toke;
             // }
-            // if (strchr(fi, '>') == 0) {
+            // if (strchr(fi, '>') != NULL) {
             //     char *token1;
             //     token1 = strtok(fi, ">");
             //     token1 = strtok(fi, " ");
@@ -211,7 +185,7 @@ int main(int argc, char *argv[]) {
                 return 0;
             }
             char *tok;
-            tok = strtok(commandLine, " ");
+            tok = strtok(commandLine, " \t");
             int j = 0;
             char *fi = NULL;
             int i = 0;
@@ -219,23 +193,23 @@ int main(int argc, char *argv[]) {
                 if (i == 1) {
                     argv[j] = tok;
                     fi = tok;
-                    tok = strtok(NULL, " ");
+                    tok = strtok(NULL, " \t");
                     j = j + 1;
                     
                 } else if (strchr(tok, '>')) {
                     argv[j] = tok;
-                    tok = strtok(NULL, " ");
+                    tok = strtok(NULL, " \t");
                     i = 1;
                     j = j + 1;
                     
                 } else if (strcmp(tok, "/bin/echo") == 0) {
                     argv[j] = tok;
                     argv[j+1] = "-n";
-                    tok = strtok(NULL, " ");
+                    tok = strtok(NULL, " \t");
                     j = j + 2;
                 } else {
                     argv[j] = tok;
-                    tok = strtok(NULL, " ");
+                    tok = strtok(NULL, " \t");
                     j = j + 1;
                 }
             }
