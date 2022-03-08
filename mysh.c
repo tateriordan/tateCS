@@ -8,16 +8,16 @@
 
 int main(int argc, char *argv[]) {
     char commandLine[512];
-    char* path = "/";
+    char* path = "";
     if (argc > 2) {
-        write(STDERR_FILENO, "Usage: mysh [batch-file]\n", 26);
+        write(STDERR_FILENO, "Usage: mysh [batch-file]\n", strlen("Usage: mysh [batch-file]\n"));
         //fprintf(stderr,"Usage: mysh [batch-file]\n");
         //fflush();
         return 1;
     }
     if (argc == 2) {
         if (!strchr(argv[1], '.')) {
-            write(STDERR_FILENO, "Error: Cannot open file this_file_does_not_exist.\n", 50);
+            write(STDERR_FILENO, "Error: Cannot open file this_file_does_not_exist.\n", strlen("Error: Cannot open file this_file_does_not_exist.\n"));
             //fprintf(stderr, "Error: Cannot open file this_file_does_not_exist.\n");
             //fflush();
             return 1;
@@ -25,8 +25,8 @@ int main(int argc, char *argv[]) {
     }
     if (argv[1]) {
         FILE *fp = fopen(argv[1],"r");
-        char buffer[100];
-        while (fgets(buffer, 100, fp) != NULL) {
+        char buffer[512];
+        while (fgets(buffer, 512, fp)) {
             if (feof(fp)) {
                 fclose(fp);
                 fflush(stdout);
@@ -34,20 +34,20 @@ int main(int argc, char *argv[]) {
                 return 0;
             }
             if (buffer == NULL) {
-                break;
-            }
-            write(STDOUT_FILENO,buffer, 512);
-            // if (strchr(buffer, '>') != NULL) {
-                
-            // }
-            if (strcmp(buffer, "exit\n") == 0) {
                 fclose(fp);
-                write(STDOUT_FILENO, "exit\n", 6);
                 fflush(stdout);
                 _exit(EXIT_SUCCESS);
                 return 0;
             }
-            
+            if (strcmp(buffer, "exit\n") == 0) {
+                fclose(fp);
+                write(STDOUT_FILENO, "exit\n", strlen("exit\n"));
+                fflush(stdout);
+                _exit(EXIT_SUCCESS);
+                return 0;
+            }
+            write(STDOUT_FILENO,buffer, strlen(buffer));
+            fflush(stdout);
             char *tok;
             tok = strtok(buffer, " ");
             int j = 0;
@@ -59,9 +59,13 @@ int main(int argc, char *argv[]) {
                     fi = tok;
                     tok = strtok(NULL, " ");
                     if (tok != NULL) {
-                        write(STDERR_FILENO, "Redirection misformatted.\n", 30);
+                        fclose(fp);
+                        write(STDERR_FILENO, "Redirection misformatted.\n", strlen("Redirection misformatted.\n"));
+                        fflush(stderr);
                         fflush(stdout);
-                        //fprintf(stderr, "Redirection misformatted.\n");
+                        write(STDOUT_FILENO, "exit\n", strlen("exit\n"));
+                        fflush(stdout);
+                        _exit(EXIT_SUCCESS);
                         return 0;
                     }
                     j = j + 1;
@@ -70,20 +74,33 @@ int main(int argc, char *argv[]) {
                     argv[j] = tok;
                     tok = strtok(NULL, " ");
                     if (tok == NULL) {
-                        write(STDERR_FILENO, "Redirection misformatted.\n", 30);
-                        //fprintf(stderr, "Redirection misformatted.\n");
+                        fclose(fp);
+                        write(STDERR_FILENO, "Redirection misformatted.\n", strlen("Redirection misformatted.\n"));
+                        
+                        fflush(stderr);
+                        write(STDOUT_FILENO, "exit\n", strlen("exit\n"));
                         fflush(stdout);
+                        _exit(EXIT_SUCCESS);
                         return 0;
                     } else if (strchr(tok, '>')) {
-                        write(STDERR_FILENO, "Redirection misformatted.\n", 30);
+                        fclose(fp);
+                        write(STDERR_FILENO, "Redirection misformatted.\n", strlen("Redirection misformatted.\n"));
+                        
+                        fflush(stderr);
+                        write(STDOUT_FILENO, "exit\n", strlen("exit\n"));
                         fflush(stdout);
-                        //fprintf(stderr, "Redirection misformatted.\n");
+                        _exit(EXIT_SUCCESS);
                         return 0;
                     }
                     i = 1;
                     j = j + 1;
                     
                     
+                } else if (strcmp(tok, "/bin/echo") == 0) {
+                    argv[j] = tok;
+                    argv[j+1] = "-n";
+                    tok = strtok(NULL, " ");
+                    j = j + 2;
                 } else {
                     argv[j] = tok;
                     tok = strtok(NULL, " ");
@@ -95,7 +112,8 @@ int main(int argc, char *argv[]) {
         // for (int i = 0; i < argc; ++i) {
         //     write(1, argv[i], strlen(argv[i]));
         // }
-            char path2[100];
+            
+            char path2[512];
             strcpy(path2, path);
             strcat(path2, argv[0]);
             for (int k = 0; k < strlen(path2); ++k) {
@@ -114,10 +132,12 @@ int main(int argc, char *argv[]) {
                     close(fd);
                     execv(path2,argv);
                     fflush(stdout);
+                    //free(buffer);
                     _exit(EXIT_SUCCESS);
                 } else {
                     execv(path2,argv);
                     fflush(stdout);
+                    //free(buffer);
                     _exit(EXIT_SUCCESS);
                 }
 
@@ -132,12 +152,13 @@ int main(int argc, char *argv[]) {
     } else {
         int helper = 1;
         while (helper) {
-            write(STDOUT_FILENO,"mysh> ", 6);
+            write(STDOUT_FILENO,"mysh> ", strlen("mysh> "));
+            fflush(stdin);
             if (!fgets(commandLine, 512, stdin)) {
                 break;
             }
             if (strcmp(commandLine, "exit\n") == 0) {
-                write(STDOUT_FILENO, "exit\n", 6);
+                //write(STDOUT_FILENO, "exit\n", strlen("exit\n"));
                 _exit(EXIT_SUCCESS);
                 return 0;
             }
@@ -159,6 +180,11 @@ int main(int argc, char *argv[]) {
                     i = 1;
                     j = j + 1;
                     
+                } else if (strcmp(tok, "/bin/echo") == 0) {
+                    argv[j] = tok;
+                    argv[j+1] = "-n";
+                    tok = strtok(NULL, " ");
+                    j = j + 2;
                 } else {
                     argv[j] = tok;
                     tok = strtok(NULL, " ");
@@ -170,8 +196,11 @@ int main(int argc, char *argv[]) {
         // for (int i = 0; i < argc; ++i) {
         //     write(1, argv[i], strlen(argv[i]));
         // }
-            char path2[100];
+            char path2[512];
             strcpy(path2, path);
+            // if (strcmp(argv[0], "/bin/echo") == 0) {
+            //     argv[0] = "/bin/echo -n";
+            // }
             strcat(path2, argv[0]);
             for (int k = 0; k < strlen(path2); ++k) {
                 if (path2[k] == '\n') {
@@ -188,7 +217,6 @@ int main(int argc, char *argv[]) {
                     dup2(fd,2);
                     close(fd);
                     execv(path2, argv);
-                    
                     _exit(EXIT_SUCCESS);
                 } else {
                     execv(path2,argv);
